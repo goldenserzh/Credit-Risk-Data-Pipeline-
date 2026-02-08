@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  airflow-webserver:
+    image: apache/airflow:2.9.0
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://sgoldaev:y4Q1dBE0Y53c0dwe@82.202.137.136:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__FERNET_KEY: ''  # Укажите свой Fernet key или сгенерируйте новый
+      AIRFLOW__WEBSERVER__SECRET_KEY: 'your-secret-key'  # Укажите свой ключ для веб-сервера
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: >
+      bash -c "airflow db init &&
+               airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com &&
+               airflow webserver"
+    restart: always
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.0
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://sgoldaev:y4Q1dBE0Y53c0dwe@82.202.137.136:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__FERNET_KEY: ''  # Укажите тот же Fernet key, что в webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./plugins:/opt/airflow/plugins
+    command: airflow scheduler
+    restart: always
+
+volumes:
+  postgres-db-volume:
+    external: true  
